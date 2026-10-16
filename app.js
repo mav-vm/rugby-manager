@@ -359,7 +359,7 @@ function team(side, name, score) {
       <h3>${esc(name)}</h3>
       <div class="score">${score}</div>
       <div class="buttons">
-        ${[['Meta +5', 5], ['Trasf. +2', 2], ['Puniz. +3', 3], ['Drop +3', 3], ['Giallo', 0], ['Rosso', 0]].map(a =>
+        ${[['Meta +5', 5], ['Tras. +2', 2], ['Puni. +3', 3], ['Drop +3', 3], ['Giallo', 0], ['Rosso', 0]].map(a =>
           `<button data-act="${a[0]}" data-side="${side}" data-p="${a[1]}">${a[0]}</button>`
         ).join('')}
       </div>
