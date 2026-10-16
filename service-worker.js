@@ -1,4 +1,3 @@
-const C='rugby-fir-v4',
-  A=['./','./index.html','./app.js','./style.css','./manifest.json','./icon.svg','./pdf.min.js','./pdf.worker.min.js','./xlsx.full.min.js','./Modello_Rose_Under.xlsx','./Modello_Estrazione_FIR_Nominativo_Unico.xlsx'];
+const C='rugby-fir-v4',  A=['./','./index.html','./app.js','./style.css','./manifest.json','./icon.svg','./pdf.min.js','./pdf.worker.min.js','./xlsx.full.min.js','./Modello_Rose_Under.xlsx','./Modello_Estrazione_FIR_Nominativo_Unico.xlsx'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A))));
 self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
