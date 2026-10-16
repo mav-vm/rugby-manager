@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rugby-fir-v5';
+const CACHE_NAME = 'rugby-fir-v6';
 
 const APP_FILES = [
   './',
