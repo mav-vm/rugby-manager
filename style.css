@@ -1,1 +1,48 @@
 :root{--g:#087f5b;--d:#0f172a;--b:#0284c7;--m:#64748b;--r:#dc2626}*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:var(--d);font-family:system-ui,-apple-system,Segoe UI,sans-serif}header{position:sticky;top:0;z-index:20;padding:12px 16px;background:#087f5b;color:#fff}header small{display:block;opacity:.8}main{max-width:920px;margin:auto;padding:14px 14px 95px}nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;background:#fffffff2;border-top:1px solid #ddd}nav button{border:0;background:transparent;border-radius:12px;padding:7px;color:var(--m);font-size:20px}nav small{display:block;font-size:11px;font-weight:800}nav .on{background:#d1fae5;color:#065f46}.card{background:#fff;margin:12px 0;padding:16px;border-radius:22px;box-shadow:0 3px 14px #0f172a12}.grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn,.outline{border:0;border-radius:13px;padding:11px 14px;background:var(--g);color:#fff;font-weight:800}.outline{background:#fff;color:var(--d);border:1px solid #cbd5e1}.danger{background:var(--r)}.full{width:100%;min-height:52px}.help{color:var(--m);font-size:14px}.pill{padding:5px 9px;border-radius:99px;background:#e2e8f0;font-size:12px;font-weight:800}label{font-size:12px;font-weight:800;color:var(--m);text-transform:uppercase}input,select{width:100%;height:44px;margin-top:5px;padding:8px 11px;border:1px solid #cbd5e1;border-radius:12px;font:inherit}.preview{overflow:auto}.preview table{width:100%;border-collapse:collapse;font-size:13px}.preview th,.preview td{padding:8px;border-bottom:1px solid #e2e8f0;text-align:left}.preview th{background:#e2e8f0}.starter{background:#eff6ff}.bench{background:#fffbeb}.timer{display:grid;grid-template-columns:auto 1fr auto;align-items:center;background:var(--d);color:#fff}.clock{text-align:center;font-size:50px;font-weight:950}.teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}.team{padding:0;overflow:hidden}.team h3{margin:0;padding:11px;background:var(--b);color:#fff;text-align:center}.team.away h3{background:#334155}.score{text-align:center;font-size:58px;font-weight:950}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:9px}.buttons button{min-height:48px;border:0;border-radius:11px;background:var(--b);color:#fff;font-weight:800}.away .buttons button{background:#334155}.event{display:flex;justify-content:space-between;padding:9px;margin:6px 0;border-radius:11px;background:#f8fafc;font-size:14px}.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;padding:12px;background:#0008}.modalbox{width:100%;max-width:600px;max-height:84vh;overflow:auto;margin:auto;padding:16px;border-radius:22px;background:#fff}.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}.players button{padding:11px;text-align:left;border:1px solid #cbd5e1;border-radius:12px;background:#fff}#toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);padding:10px 14px;border-radius:12px;background:#0f172a;color:#fff;opacity:0;transition:.2s}#toast.show{opacity:1}@media(max-width:600px){.two{grid-template-columns:1fr}.clock{font-size:42px}.score{font-size:50px}.card{padding:12px}}
+
+/* V5 - Timer compatto e pulsanti tabellone ottimizzati */
+.timer {
+  padding: 10px 14px;
+  gap: 10px;
+  min-height: 72px;
+}
+
+.timer .clock {
+  font-size: clamp(38px, 8vw, 58px);
+  line-height: 1;
+}
+
+.timer button {
+  min-height: 52px;
+  padding: 8px 14px;
+}
+
+.team .buttons button {
+  min-width: 0;
+  padding: 12px 6px;
+  font-size: clamp(14px, 3.5vw, 18px);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .timer {
+    padding: 8px 10px;
+    min-height: 64px;
+  }
+
+  .timer .clock {
+    font-size: 40px;
+  }
+
+  .timer button {
+    min-height: 46px;
+    padding: 6px 10px;
+  }
+
+  .team .buttons button {
+    padding: 10px 3px;
+    font-size: 14px;
+  }
+}
+
