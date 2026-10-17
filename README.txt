@@ -1,10 +1,15 @@
-RUGBY MATCH MANAGER FIR - RECOVERY v13
+AGGIORNAMENTO V16.1 SU BASE V15/V16
 
-Pacchetto completo ricostruito.
-- Mantiene i dati locali con la chiave rugby-fir-v1.
-- Importa anagrafica Excel FIR: CODICE, COGNOME NOME, CATEGORIA, DATA NASCITA, NOME TUTORE.
-- Importa lista gara PDF testuale FIR.
-- Pulsanti mobile: META/+5, TRASF./+2, PUNIZ./+3, DROP/+3, GIALLO, ROSSO.
-- Firma by VittMavo e icone PWA installabili incluse.
+Caricare nella root GitHub questi file:
+- index.html (sostituire)
+- service-worker.js (sostituire)
+- v16-fix.js (sostituire)
 
-Per GitHub: caricare TUTTI i file estratti nella root del repository.
+Nuovo flusso:
+1. Importa PDF FIR.
+2. Premi Conferma e crea partita.
+3. L'app compila Data, Categoria, Squadra mia e Squadra ospite.
+4. I quattro campi restano modificabili.
+5. Premi Apri tabellone per iniziare, mantenendo i giocatori del PDF.
+
+Serie A1, A2, B e C vengono mappate a Seniores.
