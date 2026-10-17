@@ -17,3 +17,10 @@ Aprire Rose e premere Importa Excel. Il file incluso `Modello_Rose_Under.xlsx` c
 
 ## Estrazione Excel FIR con nominativo unico
 L'importatore riconosce anche le colonne `Nominativo`, `Cognome Nome`, `Cognome,Nome`, `Atleta`, `Giocatore` e `Tesserato`. Un valore come `ROSSI,MARIO` viene separato automaticamente in Cognome `ROSSI` e Nome `MARIO`. I nomi composti restano nel campo Nome. Se manca la virgola, la riga viene importata con lo stato `Nominativo da controllare`.
+
+## Fogli Excel generici
+Se il foglio si chiama Dati, Foglio1, Sheet1, Elenco, Tesserati o Anagrafica, i giocatori vengono importati nella categoria selezionata nell'app prima dell'importazione. Per il file Seniores, selezionare Seniores nella schermata Partita e poi importare da Rose.
+
+
+## Versione 7
+Formato Excel FIR reale: CODICE, COGNOME NOME, CATEGORIA, DATA NASCITA, NOME TUTORE. La colonna CATEGORIA distribuisce automaticamente i tesserati in Seniores, Under 18, Under 16, Under 14 e altre categorie Under. Il PDF lista gara completa numero maglia, ruolo, documento, titolare/panchina e indicatori gara collegando il giocatore tramite cartellino FIR.
