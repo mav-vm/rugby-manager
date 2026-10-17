@@ -1,10 +1,10 @@
-PATCH V11 - PULSANTI TABELLONE MOBILE
+RUGBY MATCH MANAGER FIR - RECOVERY v13
 
-1. Copiare style.css nella cartella della PWA sostituendo il file esistente.
-2. Aprire app.js con Blocco note o un editor.
-3. Cercare: function team(side,name,score)
-4. Sostituire l'intera funzione team con quella contenuta in TEAM_FUNCTION_V11.txt.
-5. Nel service-worker.js cambiare il nome cache da rugby-fir-v10 a rugby-fir-v11.
-6. Caricare su GitHub app.js, style.css e service-worker.js aggiornati.
+Pacchetto completo ricostruito.
+- Mantiene i dati locali con la chiave rugby-fir-v1.
+- Importa anagrafica Excel FIR: CODICE, COGNOME NOME, CATEGORIA, DATA NASCITA, NOME TUTORE.
+- Importa lista gara PDF testuale FIR.
+- Pulsanti mobile: META/+5, TRASF./+2, PUNIZ./+3, DROP/+3, GIALLO, ROSSO.
+- Firma by VittMavo e icone PWA installabili incluse.
 
-La modifica non cambia punteggi, importazione Excel, PDF FIR, rose o storico.
+Per GitHub: caricare TUTTI i file estratti nella root del repository.
