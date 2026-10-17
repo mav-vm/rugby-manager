@@ -1,35 +1,205 @@
-const KEY='rugby-fir-v1';
-const EMPTY={setup:{home:'BRIXIA',away:'Ospiti',date:'',category:'Under 18'},rosters:{},matches:[],fir:null,draft:null};
-let S;try{S=Object.assign(structuredClone(EMPTY),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{S=structuredClone(EMPTY)}
-let page='setup',tick;const app=document.querySelector('#app');
-const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
-const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'';
-const fmt=x=>String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');
-const norm=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
-function toast(t){let e=document.querySelector('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3200)}
-function go(p){page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));render()}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.p));
-function render(){clearInterval(tick);({setup,match,roster,history}[page])()}
-function availableCategories(){let base=['Seniores','Under 18','Under 16','Under 14','Under 12','Under 10','Under 8','Under 6'],stored=Object.keys(S.rosters||{});return [...new Set([...base,...stored])]}
-function categoryOptions(selected){return availableCategories().map(c=>`<option value="${esc(c)}" ${c===selected?'selected':''}>${esc(c)}</option>`).join('')}
-function setup(){let s=S.setup;app.innerHTML=`<h1>Nuova partita</h1><section class="card"><h2>Importa lista gara FIR</h2><p class="help">Seleziona il PDF testuale esportato dal portale FIR. Il file viene elaborato solo sul dispositivo.</p><label class="btn">Importa PDF FIR<input id="pdf" type="file" accept="application/pdf" hidden></label></section>${S.fir?preview():''}<section class="card grid two"><label>Data<input id="date" type="date" value="${esc(s.date)}"></label><label>Categoria della partita<select id="category">${categoryOptions(s.category)}</select></label><label>Squadra mia<input id="home" value="${esc(s.home)}"></label><label>Squadra ospite<input id="away" value="${esc(s.away)}"></label></section><button id="manual" class="btn full">Apri tabellone</button>`;document.querySelector('#pdf').onchange=readPdf;['date','category','home','away'].forEach(k=>document.querySelector('#'+k).onchange=x=>{S.setup[k]=x.target.value;save()});document.querySelector('#manual').onclick=()=>{newMatch();go('match')};let confirm=document.querySelector('#confirmFir');if(confirm)confirm.onclick=confirmFir}
-async function readPdf(ev){let f=ev.target.files[0];if(!f)return;try{let pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,text='';for(let i=1;i<=pdf.numPages;i++){let c=await(await pdf.getPage(i)).getTextContent();text+=' '+c.items.map(x=>x.str).join(' ')}S.fir=parseFir(text.replace(/\s+/g,' ').trim(),f.name);save();toast(`${S.fir.players.length} giocatori rilevati`);setup()}catch(err){console.error(err);toast('PDF non leggibile o non testuale')}}
-function parseFir(t,file){let gara=(t.match(/Alla Gara\s+(.+?)\s+del Campionato/i)||[])[1]||'',date=(t.match(/si gioca il\s+(\d{2}\/\d{2}\/\d{4})/i)||[])[1]||'',hour=(t.match(/alle ore\s+(\d{1,2}:\d{2})/i)||[])[1]||'',field=(t.match(/sul campo\s+(.+?)\s+N\. Maglia/i)||[])[1]||'',category=(t.match(/del Campionato\s+(.+?)\s+che si gioca/i)||[])[1]||'',society=(t.match(/Società\s+\d+\s+-\s+(.+?)\s+-\s+Sq/i)||[])[1]||'';let start=t.indexOf('N. Maglia'),end=t.indexOf('Sostituzioni'),block=t.slice(start,end>start?end:undefined),benchAt=block.indexOf('Giocatori in panchina');let re=/(\d{1,2})\s+([A-Z0-9]{1,3})\s+([A-ZÀ-Ž' ]+,[A-ZÀ-Ž' ]+(?:\s+\((?:C|V|1L)\))*)\s+(\d{5,7})\s+(\d{2}\/\d{2}\/\d{4})\s+([A-Z0-9]+)/g,players=[],m;while((m=re.exec(block))){let raw=m[3].trim(),flags=[...raw.matchAll(/\((C|V|1L)\)/g)].map(x=>x[1]);raw=raw.replace(/\s*\((?:C|V|1L)\)/g,'').trim();let[surname,...names]=raw.split(',');players.push({id:uid(),number:m[1],role:m[2],surname:surname.trim(),name:names.join(',').trim(),firCard:m[4],birth:m[5],document:m[6],status:m.index>benchAt&&benchAt>=0?'Panchina':'Titolare',flags})}let parts=gara.split('-');return{file,gara,category,date,hour,field,society,home:society||parts.at(-1)||'',away:parts[0]||'',players,raw:t}}
-function preview(){let f=S.fir;return `<section class="card preview"><div class="row"><div><h2>Controllo lista gara</h2><p class="help">${esc(f.gara)} · ${esc(f.date)} ${esc(f.hour)} · ${esc(f.category)}</p></div><span class="pill">${f.players.length} giocatori</span></div><p><b>Campo:</b> ${esc(f.field)}</p><table><thead><tr><th>Maglia</th><th>Ruolo</th><th>Giocatore</th><th>Tessera FIR</th><th>Nascita</th><th>Documento</th><th>Stato</th></tr></thead><tbody>${f.players.map(p=>`<tr class="${p.status==='Titolare'?'starter':'bench'}"><td>${p.number}</td><td>${p.role}</td><td>${esc(p.surname)} ${esc(p.name)}</td><td>${p.firCard}</td><td>${p.birth}</td><td>${p.document}</td><td>${p.status}</td></tr>`).join('')}</tbody></table><button id="confirmFir" class="btn full">Conferma e crea partita</button></section>`}
-function confirmFir(){let f=S.fir,date=f.date.split('/').reverse().join('-');S.setup={...S.setup,date,category:f.category,home:f.home,away:f.away};let cat=S.setup.category;S.rosters[cat]=S.rosters[cat]||[];f.players.forEach(p=>{let found=S.rosters[cat].find(x=>String(x.firCard)===String(p.firCard));if(!found)S.rosters[cat].push({...p,present:true});else Object.assign(found,{number:p.number||found.number,role:p.role||found.role,birth:p.birth||found.birth,document:p.document||found.document,status:p.status,flags:p.flags,present:true})});newMatch(f.players);save();go('match')}
-function newMatch(lineup=[]){S.draft={id:uid(),setup:{...S.setup},lineup,score:{home:0,away:0},period:1,seconds:0,running:false,started:0,events:[]};save()}
-function secs(){let d=S.draft;return d.seconds+(d.running?Math.floor((Date.now()-d.started)/1000):0)}
-function team(side,name,score){return `<section class="card team ${side==='away'?'away':''}"><h3>${esc(name)}</h3><div class="score">${score}</div><div class="buttons">${[['Meta',5],['Trasf.',2],['Pun.',3],['Drop',3],['Giallo',0],['Rosso',0]].map(a=>`<button data-act="${a[0]}" data-side="${side}" data-p="${a[1]}">${a[0]} ${a[1]||''}</button>`).join('')}</div></section>`}
-function match(){if(!S.draft)newMatch();let d=S.draft,s=d.setup;app.innerHTML=`<section class="card timer"><button id="period" class="outline">T${d.period}</button><div id="clock" class="clock">${fmt(secs())}</div><button id="play" class="btn">${d.running?'Ⅱ':'▶'}</button></section><div class="teams">${team('home',s.home,d.score.home)}${team('away',s.away,d.score.away)}</div><section class="card"><b>Eventi</b>${d.events.map(x=>`<div class="event"><span>${esc(x.team)}: ${esc(x.label)} ${esc(x.player)}</span><span>T${x.period} ${fmt(x.second)}</span></div>`).join('')}</section><div class="actions"><button id="undo" class="outline">Annulla</button><button id="finish" class="btn">Salva partita</button></div>`;document.querySelector('#play').onclick=()=>{if(d.running){d.seconds=secs();d.running=false}else{d.running=true;d.started=Date.now()}save();match()};document.querySelector('#period').onclick=()=>{d.running=false;d.seconds=0;d.period=d.period===1?2:1;save();match()};document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>eventAdd(b.dataset.side,b.dataset.act,+b.dataset.p));document.querySelector('#undo').onclick=()=>{let x=d.events.shift();if(x)d.score[x.side]=Math.max(0,d.score[x.side]-x.points);save();match()};document.querySelector('#finish').onclick=()=>{d.running=false;S.matches.unshift(d);S.draft=null;save();go('history')};if(d.running)tick=setInterval(()=>document.querySelector('#clock').textContent=fmt(secs()),500)}
-function eventAdd(side,label,points){let d=S.draft,a={side,label,points};if(side==='away')return commit(a,null);let ps=d.lineup.length?d.lineup:(S.rosters[d.setup.category]||[]);document.body.insertAdjacentHTML('beforeend',`<div class="modal"><div class="modalbox"><h2>${label}</h2><div class="players">${ps.map(p=>`<button data-pl="${p.id}"><b>#${p.number||'-'}</b> ${esc(p.name)} ${esc(p.surname)}<small style="display:block">${p.status||''}</small></button>`).join('')}</div><button id="none" class="btn full">Senza giocatore</button></div></div>`);document.querySelector('#none').onclick=()=>{document.querySelector('.modal').remove();commit(a,null)};document.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{let p=ps.find(x=>x.id===b.dataset.pl);document.querySelector('.modal').remove();commit(a,p)})}
-function commit(a,p){let d=S.draft;d.score[a.side]+=a.points;d.events.unshift({id:uid(),...a,team:a.side==='home'?d.setup.home:d.setup.away,player:p?`#${p.number||'-'} ${p.name} ${p.surname}`:'',period:d.period,second:secs()});save();match()}
-function roster(){if(!S.setup.category||!availableCategories().includes(S.setup.category))S.setup.category=availableCategories()[0];let ps=S.rosters[S.setup.category]||[];app.innerHTML=`<h1>Anagrafica societaria</h1><section class="card"><label>Categoria da visualizzare<select id="rosterCategory">${categoryOptions(S.setup.category)}</select></label><div class="actions" style="margin-top:12px"><label class="btn">Importa Excel<input id="excelRoster" type="file" accept=".xlsx,.xls" hidden></label><button id="exportRoster" class="outline">Esporta Excel</button></div><p class="help">Il file Excel societario alimenta l'anagrafica. Il PDF FIR completa la lista della singola gara.</p></section><h2>Rosa ${esc(S.setup.category)} <span class="pill">${ps.length} giocatori</span></h2>${ps.map(p=>`<section class="card row"><div><b>#${p.number||'-'} ${esc(p.surname)} ${esc(p.name)}</b><small style="display:block">${esc(p.role||'')} · FIR ${esc(p.firCard||'mancante')} · ${esc(p.birth||p.year||'')}</small></div><span class="pill">${p.status||'Rosa'}</span></section>`).join('')||'<section class="card help">Nessun giocatore. Importare il file Excel societario.</section>'}`;document.querySelector('#rosterCategory').onchange=e=>{S.setup.category=e.target.value;save();roster()};document.querySelector('#excelRoster').onchange=importRosterExcel;document.querySelector('#exportRoster').onclick=exportRosterExcel}
-function excelDate(v){if(!v)return'';let m=String(v).match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);return m?`${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}/${m[3]}`:String(v)}
-function fieldByNames(row,names){let keys=Object.keys(row),wanted=names.map(norm),key=keys.find(k=>wanted.includes(norm(k)));return key===undefined?'':row[key]}
-function splitFirName(row){let surname=String(fieldByNames(row,['Cognome'])||'').trim(),name=String(fieldByNames(row,['Nome'])||'').trim();if(surname||name)return{surname,name,review:false};let full=String(fieldByNames(row,['Cognome Nome','Cognome,Nome','Nominativo','Atleta','Giocatore','Tesserato'])||'').trim();if(!full)return{surname:'',name:'',review:false};let comma=full.indexOf(',');if(comma>=0)return{surname:full.slice(0,comma).trim(),name:full.slice(comma+1).trim(),review:false};return{surname:full,name:'',review:true}}
-function categoryFromFir(value,fallback){let v=String(value||'').trim(),n=norm(v);if(!v)return fallback;if(n.includes('seniores')||n.includes('senior'))return'Seniores';let m=v.match(/UNDER\s*[- ]?\s*(\d{1,2})/i)||v.match(/\bU\s*[- ]?\s*(\d{1,2})\b/i);if(m)return'Under '+m[1];return fallback}
-async function importRosterExcel(ev){let file=ev.target.files[0];if(!file)return;try{let wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true}),added=0,updated=0,reviews=0,counts={};wb.SheetNames.forEach(sn=>{if(norm(sn)==='istruzioni')return;let rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',raw:false});if(!rows.length)return;let generic=['dati','foglio1','sheet1','elenco','tesserati','anagrafica'].includes(norm(sn)),fallback=generic?S.setup.category:sn.trim();rows.forEach(r=>{let person=splitFirName(r),fir=String(fieldByNames(r,['CODICE','Cartellino FIR','Tessera FIR','Numero tessera','N. Tessera','Tesserino'])||'').trim(),cat=categoryFromFir(fieldByNames(r,['CATEGORIA','Categoria giocatore']),fallback);S.rosters[cat]=S.rosters[cat]||[];let found=fir?S.rosters[cat].find(x=>String(x.firCard)===fir):null,obj={id:found?.id||uid(),number:found?.number||'',surname:person.surname,name:person.name,year:found?.year||'',role:found?.role||'',firCard:fir,birth:excelDate(fieldByNames(r,['DATA NASCITA','Data di nascita','Nascita'])||found?.birth||''),medicalExpiry:found?.medicalExpiry||'',contact:fieldByNames(r,['NOME TUTORE','Contatto famiglia','Contatto','Tutore'])||found?.contact||'',notes:found?.notes||'',present:true,status:person.review?'Nominativo da controllare':'Rosa'};if(person.review)reviews++;if(found){Object.assign(found,obj);updated++}else if(obj.surname||obj.name){S.rosters[cat].push(obj);added++}counts[cat]=(counts[cat]||0)+1})});let importedCats=Object.keys(counts);if(importedCats.length){S.setup.category=importedCats.includes('Seniores')?'Seniores':importedCats[0]}save();let summary=Object.entries(counts).map(([k,v])=>k+': '+v).join(' · ');toast(`${added} aggiunti, ${updated} aggiornati${reviews?', '+reviews+' da controllare':''} · ${summary}`);roster()}catch(err){console.error(err);toast('File Excel non riconosciuto')}}
-function exportRosterExcel(){let cat=S.setup.category,ps=S.rosters[cat]||[],wb=XLSX.utils.book_new(),rows=ps.map(p=>({Numero:p.number,Cognome:p.surname,Nome:p.name,Anno:p.year||'',Ruolo:p.role||'','Cartellino FIR':p.firCard||'','Data di nascita':p.birth||'','Scadenza visita medica':p.medicalExpiry||'','Contatto famiglia':p.contact||'',Note:p.notes||'',Presente:p.present===false?'NO':'SI'}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),cat.slice(0,31));XLSX.writeFile(wb,'Rosa_'+cat.replaceAll(' ','_')+'.xlsx')}
+const KEY='rugby-fir-v1';let
+S=JSON.parse(localStorage.getItem(KEY)||'{"setup":{"home":"BRIXIA","away":"Ospit
+i","date":"","category":"Under
+18"},"rosters":{},"matches":[],"fir":null,"draft":null}'),page='setup',tick;cons
+t app=document.querySelector('#app');const
+save=()=>localStorage.setItem(KEY,JSON.stringify(S));const
+esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','
+"':'&quot;',"'":'&#39;'}[c]));const
+uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'';const
+fmt=x=>String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0')
+;function toast(t){let
+e=document.querySelector('#toast');e.textContent=t;e.classList.add('show');setTi
+meout(()=>e.classList.remove('show'),2200)}function
+go(p){page=p;document.querySelectorAll('nav
+button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));render()}document.
+querySelectorAll('nav
+button').forEach(b=>b.onclick=()=>go(b.dataset.p));function
+render(){clearInterval(tick);({setup,match,roster,history}[page])()} function
+setup(){let s=S.setup;app.innerHTML=`<h1>Nuova partita</h1><section
+class="card"><h2>Importa lista gara FIR</h2><p class="help">Seleziona il PDF
+testuale esportato dal portale FIR. Il file viene elaborato solo sul
+dispositivo.</p><label class="btn">Importa PDF FIR<input id="pdf" type="file"
+accept="application/pdf" hidden></label></section>${S.fir?preview():''}<section
+class="card grid two"><label>Data<input id="date" type="date"
+value="${esc(s.date)}"></label><label>Categoria<input id="category"
+value="${esc(s.category)}"></label><label>Squadra mia<input id="home"
+value="${esc(s.home)}"></label><label>Squadra ospite<input id="away"
+value="${esc(s.away)}"></label></section><button id="manual" class="btn
+full">Apri
+tabellone</button>`;document.querySelector('#pdf').onchange=readPdf;['date','cat
+egory','home','away'].forEach(k=>document.querySelector('#'+k).onchange=x=>{S.se
+tup[k]=x.target.value;save()});document.querySelector('#manual').onclick=()=>{ne
+wMatch();go('match')};let
+confirm=document.querySelector('#confirmFir');if(confirm)confirm.onclick=confirm
+Fir} async function readPdf(ev){let f=ev.target.files[0];if(!f)return;try{let
+pdf=await pdfjsLib.getDocument({data:await
+f.arrayBuffer()}).promise,text='';for(let i=1;i<=pdf.numPages;i++){let c=await
+(await pdf.getPage(i)).getTextContent();text+=' '+c.items.map(x=>x.str).join('
+')}S.fir=parseFir(text.replace(/\s+/g,'
+').trim(),f.name);save();toast(`${S.fir.players.length} giocatori
+rilevati`);setup()}catch(err){console.error(err);toast('PDF non leggibile o non
+testuale')}} function parseFir(t,file){let gara=(t.match(/Alla
+Gara\s+(.+?)\s+del Campionato/i)||[])[1]||'',date=(t.match(/si gioca
+il\s+(\d{2}\/\d{2}\/\d{4})/i)||[])[1]||'',hour=(t.match(/alle
+ore\s+(\d{1,2}:\d{2})/i)||[])[1]||'',field=(t.match(/sul campo\s+(.+?)\s+N\.
+Maglia/i)||[])[1]||'',category=(t.match(/del Campionato\s+(.+?)\s+che si
+gioca/i)||[])[1]||'',society=(t.match(/Società\s+\d+\s+-\s+(.+?)\s+-
+\s+Sq/i)||[])[1]||'';let start=t.indexOf('N.
+Maglia'),end=t.indexOf('Sostituzioni');let
+block=t.slice(start,end>start?end:undefined),benchAt=block.indexOf('Giocatori in
+panchina');let re=/(\d{1,2})\s+([A-Z0-9]{1,3})\s+([A-ZÀ-Ž' ]+,[A-ZÀ-Ž'
+]+(?:\s+\((?:C|V|1L)\))*)\s+(\d{5,7})\s+(\d{2}\/\d{2}\/\d{4})\s+([A-Z0-
+9]+)/g,players=[],m;while((m=re.exec(block))){let
+raw=m[3].trim(),flags=[...raw.matchAll(/\((C|V|1L)\)/g)].map(x=>x[1]);raw=raw.re
+place(/\s*\((?:C|V|1L)\)/g,'').trim();let
+[surname,...names]=raw.split(',');players.push({id:uid(),number:m[1],role:m[2],s
+urname:surname.trim(),name:names.join(',').trim(),firCard:m[4],birth:m[5],docume
+nt:m[6],status:m.index>benchAt&&benchAt>=0?'Panchina':'Titolare',flags})}let
+parts=gara.split('-
+');return{file,gara,category,date,hour,field,society,home:society||parts.at(-
+1)||'',away:parts[0]||'',players,raw:t}} function preview(){let f=S.fir;return
+`<section class="card preview"><div class="row"><div><h2>Controllo lista
+gara</h2><p class="help">${esc(f.gara)} · ${esc(f.date)} ${esc(f.hour)} ·
+${esc(f.category)}</p></div><span class="pill">${f.players.length}
+giocatori</span></div><p><b>Campo:</b>
+${esc(f.field)}</p><table><thead><tr><th>Maglia</th><th>Ruolo</th><th>Giocatore<
+/th><th>Tessera
+FIR</th><th>Nascita</th><th>Documento</th><th>Stato</th></tr></thead><tbody>${f.
+players.map(p=>`<tr
+class="${p.status==='Titolare'?'starter':'bench'}"><td>${p.number}</td><td>${p.r
+ole}</td><td>${esc(p.surname)}
+${esc(p.name)}</td><td>${p.firCard}</td><td>${p.birth}</td><td>${p.document}</td
+><td>${p.status}</td></tr>`).join('')}</tbody></table><button id="confirmFir"
+class="btn full">Conferma e crea partita</button></section>`} function
+confirmFir(){let f=S.fir,date=f.date.split('/').reverse().join('-
+');S.setup={...S.setup,date,category:f.category,home:f.home,away:f.away};let
+cat=S.setup.category;S.rosters[cat]=S.rosters[cat]||[];f.players.forEach(p=>{let
+found=S.rosters[cat].find(x=>x.firCard===p.firCard);if(!found)S.rosters[cat].pus
+h({...p,present:true});else
+Object.assign(found,p)});newMatch(f.players);save();go('match')} function
+newMatch(lineup=[]){S.draft={id:uid(),setup:{...S.setup},lineup,score:{home:0,aw
+ay:0},period:1,seconds:0,running:false,started:0,events:[]};save()}function
+secs(){let d=S.draft;return d.seconds+(d.running?Math.floor((Date.now()-
+d.started)/1000):0)}function match(){if(!S.draft)newMatch();let
+d=S.draft,s=d.setup;app.innerHTML=`<section class="card timer"><button
+id="period" class="outline">T${d.period}</button><div id="clock"
+class="clock">${fmt(secs())}</div><button id="play"
+class="btn">${d.running?'Ⅱ':'▶'}</button></section><div
+class="teams">${team('home',s.home,d.score.home)}${team('away',s.away,d.score.aw
+ay)}</div><section class="card"><b>Eventi</b>${d.events.map(x=>`<div
+class="event"><span>${esc(x.team)}: ${esc(x.label)}
+${esc(x.player)}</span><span>T${x.period}
+${fmt(x.second)}</span></div>`).join('')}</section><div class="actions"><button
+id="undo" class="outline">Annulla</button><button id="finish" class="btn">Salva
+partita</button></div>`;document.querySelector('#play').onclick=()=>{if(d.runnin
+g){d.seconds=secs();d.running=false}else{d.running=true;d.started=Date.now()}sav
+e();match()};document.querySelector('#period').onclick=()=>{d.running=false;d.se
+conds=0;d.period=d.period===1?2:1;save();match()};document.querySelectorAll('[da
+ta-
+act]').forEach(b=>b.onclick=()=>eventAdd(b.dataset.side,b.dataset.act,+b.dataset
+.p));document.querySelector('#undo').onclick=()=>{let
+x=d.events.shift();if(x)d.score[x.side]-
+=x.points;save();match()};document.querySelector('#finish').onclick=()=>{d.runni
+ng=false;S.matches.unshift(d);S.draft=null;save();go('history')};if(d.running)ti
+ck=setInterval(()=>document.querySelector('#clock').textContent=fmt(secs()),500)
+}
+function team(side,name,score){
+  const actions=[
+    {label:'Meta',short:'META',points:5},
+    {label:'Trasformazione',short:'TRASF.',points:2},
+    {label:'Punizione',short:'PUNIZ.',points:3},
+    {label:'Drop',short:'DROP',points:3},
+    {label:'Giallo',short:'GIALLO',points:0},
+    {label:'Rosso',short:'ROSSO',points:0}
+  ];
+  return `<section class="card team ${side==='away'?'away':''}">
+    <h3>${esc(name)}</h3>
+    <div class="score">${score}</div>
+    <div class="buttons">
+      ${actions.map(a=>`<button data-act="${a.label}" data-side="${side}" data-p="${a.points}">
+        <span class="action-name">${a.short}</span>
+        ${a.points?`<span class="action-points">+${a.points}</span>`:''}
+      </button>`).join('')}
+    </div>
+  </section>`
+}	
+function eventAdd(side,label,points){let
+d=S.draft,a={side,label,points};if(side==='away')return commit(a,null);let
+ps=d.lineup.length?d.lineup:(S.rosters[d.setup.category]||[]);document.body.inse
+rtAdjacentHTML('beforeend',`<div class="modal"><div
+class="modalbox"><h2>${label}</h2><div class="players">${ps.map(p=>`<button
+data-pl="${p.id}"><b>#${p.number}</b> ${esc(p.name)} ${esc(p.surname)}<small
+style="display:block">${p.status||''}</small></button>`).join('')}</div><button
+id="none" class="btn full">Senza
+giocatore</button></div></div>`);document.querySelector('#none').onclick=()=>{do
+cument.querySelector('.modal').remove();commit(a,null)};document.querySelectorAl
+l('[data-pl]').forEach(b=>b.onclick=()=>{let
+p=ps.find(x=>x.id===b.dataset.pl);document.querySelector('.modal').remove();comm
+it(a,p)})}function commit(a,p){let
+d=S.draft;d.score[a.side]+=a.points;d.events.unshift({id:uid(),...a,team:a.side=
+=='home'?d.setup.home:d.setup.away,player:p?`#${p.number} ${p.name}
+${p.surname}`:'',period:d.period,second:secs()});save();match()} function
+roster(){let ps=S.rosters[S.setup.category]||[];app.innerHTML=`<h1>Anagrafica
+societaria</h1><section class="card"><div class="actions"><label
+class="btn">Importa Excel<input id="excelRoster" type="file" accept=".xlsx,.xls"
+hidden></label><button id="exportRoster" class="outline">Esporta
+Excel</button></div><p class="help">Il file Excel può contenere un foglio per
+categoria. Il PDF FIR crea invece la lista della singola
+gara.</p></section><h2>Rosa ${esc(S.setup.category)}</h2>${ps.map(p=>`<section
+class="card row"><div><b>#${p.number||'-'} ${esc(p.surname)}
+${esc(p.name)}</b><small style="display:block">${esc(p.role||'')} · FIR
+${esc(p.firCard||'mancante')} · ${esc(p.birth||p.year||'')}</small></div><span
+class="pill">${p.status||'Rosa'}</span></section>`).join('')||'<section
+class="card help">Nessun giocatore. Importare il file Excel
+societario.</section>'}`;document.querySelector('#excelRoster').onchange=importR
+osterExcel;document.querySelector('#exportRoster').onclick=exportRosterExcel}
+function excelDate(v){if(!v)return'';let m=String(v).match(/(\d{1,2})[\/-
+](\d{1,2})[\/-](\d{4})/);return
+m?`${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}/${m[3]}`:String(v)} function
+fieldByNames(row,names){let keys=Object.keys(row),wanted=names.map(norm);let
+key=keys.find(k=>wanted.includes(norm(k)));return key===undefined?'':row[key]}
+function splitFirName(row){let
+surname=String(fieldByNames(row,['Cognome'])||'').trim(),name=String(fieldByName
+s(row,['Nome'])||'').trim();if(surname||name)return{surname,name,review:false};l
+et full=String(fieldByNames(row,['Cognome
+Nome','Cognome,Nome','Nominativo','Atleta','Giocatore','Tesserato'])||'').trim()
+;if(!full)return{surname:'',name:'',review:false};let
+comma=full.indexOf(',');if(comma>=0)return{surname:full.slice(0,comma).trim(),na
+me:full.slice(comma+1).trim(),review:false};return{surname:full,name:'',review:t
+rue}} async function importRosterExcel(ev){let
+file=ev.target.files[0];if(!file)return;try{let wb=XLSX.read(await
+file.arrayBuffer(),{type:'array',cellDates:true}),added=0,updated=0,reviews=0;wb
+.SheetNames.forEach(sn=>{if(norm(sn)==='istruzioni')return;let
+rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',raw:false});if(!rows.leng
+th)return;let
+cat=sn.trim();S.rosters[cat]=S.rosters[cat]||[];rows.forEach(r=>{let
+person=splitFirName(r),fir=String(fieldByNames(r,['Cartellino FIR','Tessera
+FIR','Numero tessera','N.
+Tessera','Tesserino'])||'').trim(),found=fir?S.rosters[cat].find(x=>String(x.fir
+Card)===fir):null,obj={id:found?.id||uid(),number:fieldByNames(r,['Numero','N.
+Maglia','Maglia'])||'',surname:person.surname,name:person.name,year:fieldByNames
+(r,['Anno','Anno
+nascita'])||'',role:fieldByNames(r,['Ruolo'])||'',firCard:fir,birth:excelDate(fi
+eldByNames(r,['Data di
+nascita','Nascita'])||''),medicalExpiry:excelDate(fieldByNames(r,['Scadenza
+visita medica','Visita medica'])||''),contact:fieldByNames(r,['Contatto
+famiglia','Contatto'])||'',notes:fieldByNames(r,['Note'])||'',present:String(fie
+ldByNames(r,['Presente'])||'SI').toUpperCase()!=='NO',status:person.review?'Nomi
+nativo da
+controllare':'Rosa'};if(person.review)reviews++;if(found){Object.assign(found,ob
+j);updated++}else
+if(obj.surname||obj.name){S.rosters[cat].push(obj);added++}})});save();toast(`${
+added} aggiunti, ${updated} aggiornati${reviews?', '+reviews+' da
+controllare':''}`);roster()}catch(err){console.error(err);toast('File Excel non
+riconosciuto')}} function exportRosterExcel(){let
+cat=S.setup.category,ps=S.rosters[cat]||[],wb=XLSX.utils.book_new(),rows=ps.map(
+p=>({Numero:p.number,Cognome:p.surname,Nome:p.name,Anno:p.year||'',Ruolo:p.role|
+|'','Cartellino FIR':p.firCard||'','Data di nascita':p.birth||'','Scadenza
+visita medica':p.medicalExpiry||'','Contatto
+famiglia':p.contact||'',Note:p.notes||'',Presente:p.present===false?'NO':'SI'}))
+;XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),cat.slice(0,31))
+;XLSX.writeFile(wb,'Rosa_'+cat.replaceAll(' ','_')+'.xlsx')}
+
 function history(){app.innerHTML=`<h1>Storico</h1>${S.matches.map(m=>`<section class="card"><b>${esc(m.setup.home)} ${m.score.home} - ${m.score.away} ${esc(m.setup.away)}</b><p>${esc(m.setup.date)} · ${m.events.length} eventi</p></section>`).join('')||'<section class="card help">Nessuna partita salvata.</section>'}`}
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));render();
