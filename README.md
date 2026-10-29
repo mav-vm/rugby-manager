@@ -1,26 +1,12 @@
-# Rugby Match Manager - Importazione lista gara FIR
+# Rugby Match Manager FIR v26.3.7
 
-La PWA importa PDF testuali esportati dal portale FIR, mostra un controllo dei dati e crea la partita con i soli giocatori della lista gara.
+PWA per preparazione partita, importazione liste FIR, gestione live, tabellino, storico, backup ed esportazione statistiche.
 
-## Avvio PC
-1. Estrarre lo ZIP.
-2. Aprire la cartella.
-3. Nella barra di Esplora file scrivere `cmd` e premere Invio.
-4. Digitare `python -m http.server 8080`.
-5. Aprire `http://localhost:8080`.
+## Avvio
+Pubblicare tutti i file nella radice del repository GitHub Pages. Dopo un aggiornamento attendere il completamento del deploy, chiudere e riaprire la PWA.
 
-## Importazione
-Aprire Partita, premere Importa PDF FIR, selezionare il PDF, controllare i dati e premere Conferma e crea partita.
+## Dati
+I dati ufficiali sono salvati localmente nel browser/PWA. Prima di manutenzioni importanti eseguire sempre un backup JSON dall'app.
 
-## Anagrafica societaria Excel
-Aprire Rose e premere Importa Excel. Il file incluso `Modello_Rose_Under.xlsx` contiene un foglio per categoria. I giocatori sono collegati tramite Cartellino FIR. L'importazione PDF FIR crea la lista gara senza sostituire le altre categorie.
-
-## Estrazione Excel FIR con nominativo unico
-L'importatore riconosce anche le colonne `Nominativo`, `Cognome Nome`, `Cognome,Nome`, `Atleta`, `Giocatore` e `Tesserato`. Un valore come `ROSSI,MARIO` viene separato automaticamente in Cognome `ROSSI` e Nome `MARIO`. I nomi composti restano nel campo Nome. Se manca la virgola, la riga viene importata con lo stato `Nominativo da controllare`.
-
-## Fogli Excel generici
-Se il foglio si chiama Dati, Foglio1, Sheet1, Elenco, Tesserati o Anagrafica, i giocatori vengono importati nella categoria selezionata nell'app prima dell'importazione. Per il file Seniores, selezionare Seniores nella schermata Partita e poi importare da Rose.
-
-
-## Versione 7
-Formato Excel FIR reale: CODICE, COGNOME NOME, CATEGORIA, DATA NASCITA, NOME TUTORE. La colonna CATEGORIA distribuisce automaticamente i tesserati in Seniores, Under 18, Under 16, Under 14 e altre categorie Under. Il PDF lista gara completa numero maglia, ruolo, documento, titolare/panchina e indicatori gara collegando il giocatore tramite cartellino FIR.
+## Documentazione
+La cronologia sintetica è in `docs/RELEASE_HISTORY.md`.
