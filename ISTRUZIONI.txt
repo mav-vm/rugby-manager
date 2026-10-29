@@ -1,0 +1,6 @@
+RUGBY MATCH MANAGER FIR v26.3.7
+1. Caricare nella radice del repository ufficiale tutti i file di questo pacchetto.
+2. Scegliere la sostituzione dei file esistenti.
+3. Commit consigliato: Release Rugby Match Manager FIR v26.3.7
+4. Attendere GitHub Pages, poi chiudere e riaprire la PWA.
+La cache prevista e: rugby-fir-v26-3-7-r3
