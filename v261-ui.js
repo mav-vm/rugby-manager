@@ -101,7 +101,7 @@ function editAway(list=[],meta={}){
 }
 function setup(){
  let s=S.setup,awayOk=S.awayRoster.length,homeOk=S.homeRoster.length;
- app.innerHTML=`<div class="page-title"><div><small>V26.1 · Preparazione guidata</small><h1>Prepara la partita</h1></div><span class="step-pill">${homeOk&&awayOk?'Pronta':'Da completare'}</span></div>
+ app.innerHTML=`<div class="page-title"><div><h1>Prepara la partita</h1></div><span class="step-pill">${homeOk&&awayOk?'Pronta':'Da completare'}</span></div>
  <section class="hero card"><div><small>PASSO 1</small><h2>Dati della partita</h2><p>Puoi correggere i dati estratti dalla lista FIR prima di aprire il tabellone.</p></div></section>
  <section class="card grid setup-grid"><label>Data<input id="date" type="date" value="${esc(s.date)}"></label><label>Categoria<select id="category">${['Seniores','Under 18','Under 16','Under 14'].map(x=>`<option ${x===s.category?'selected':''}>${x}</option>`).join('')}</select></label><label>Squadra mia<input id="home" value="${esc(s.home)}"></label><label>Sede<select id="venue"><option ${s.venue==='CASA'?'selected':''}>CASA</option><option ${s.venue==='TRASFERTA'?'selected':''}>TRASFERTA</option></select></label><label>Squadra avversaria<input id="away" value="${esc(s.away)}"></label><label>Minuti per tempo<input id="half" type="number" min="1" value="${s.minutesPerHalf}"></label></section>
  <section class="card import-card"><div class="section-head"><div><small>PASSO 2</small><h2>Lista gara della mia squadra</h2></div><span class="status ${homeOk?'ok':''}">${homeOk?`✓ ${S.homeRoster.length} giocatori`:'Non importata'}</span></div><label class="btn upload">Importa PDF FIR<input id="homePdf" type="file" accept="application/pdf" hidden></label></section>
