@@ -1,10 +1,20 @@
-INTEGRAZIONE MANUALE NELL'APP - v26.3.7
+RUGBY MATCH MANAGER FIR v26.3.8-test
 
-Caricare tutti gli 8 file nella radice del repository ufficiale.
-Sovrascrivere i file esistenti e aggiungere v2637-manual.js e v2637-manual.css.
+Caricare TUTTI i file di questo pacchetto nella radice del repository TEST.
+I file esistenti devono essere sovrascritti; i due file v2638 devono essere aggiunti.
+Non caricare questo pacchetto nel repository ufficiale.
+
 Commit consigliato:
-Integra manuale d'uso offline nella v26.3.7
+v26.3.8-test: maglia libera e ruolo assegnato al cambio
 
-Dopo GitHub Pages, chiudere completamente la PWA e riaprirla.
-Cache: rugby-fir-v26-3-7-r5
-La nuova voce Guida compare nella barra inferiore.
+Correzioni:
+- maglia libera: 0, 23, A, 1B, S/N;
+- Titolare/Riserva non dedotti dalla maglia;
+- ruolo indipendente dalla maglia;
+- 1L mantenuto come qualifica FIR;
+- ruolo della riserva scelto al cambio o alla temporanea;
+- ricerca Live prioritaria per maglia;
+- tabellino ordinato secondo l'ordine FIR, non per numero di maglia;
+- cache rugby-fir-v26-3-8-test-r1.
+
+Dopo GitHub Pages chiudere completamente la PWA TEST e riaprirla.
