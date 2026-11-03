@@ -1,10 +1,10 @@
 'use strict';
-/* v26.3.5-test - caricare prima di app.js. Separa TEST/UFFICIALE e gestisce schema 2. */
+/* v26.3.9 - caricare prima di app.js. Separa TEST/UFFICIALE e gestisce schema 2. */
 (function(){
  const LEGACY='rugby-fir-v26';
  const explicit=String(window.RUGBY_CHANNEL||'').toLowerCase();
- const isTest=explicit?explicit==='test':/rugby-manager-v26-test/i.test(location.pathname);
- const CHANNEL=isTest?'rugby-manager-test-data':'rugby-manager-official-data';
+ const isTest= false;
+ const CHANNEL='rugby-manager-official-data';
  const SCHEMA=2,INSTALL_KEY=CHANNEL+'-installation-id',PROFILE_KEY=CHANNEL+'-club-profile';
  const rawGet=Storage.prototype.getItem,rawSet=Storage.prototype.setItem,rawRemove=Storage.prototype.removeItem;
  const read=k=>rawGet.call(localStorage,k),write=(k,v)=>rawSet.call(localStorage,k,v);
