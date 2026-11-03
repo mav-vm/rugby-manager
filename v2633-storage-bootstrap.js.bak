@@ -18,5 +18,5 @@
  Storage.prototype.getItem=function(k){return rawGet.call(this,k===LEGACY?CHANNEL:k)};
  Storage.prototype.setItem=function(k,v){if(k===LEGACY)return rawSet.call(this,CHANNEL,normalize(v));return rawSet.call(this,k,v)};
  Storage.prototype.removeItem=function(k){return rawRemove.call(this,k===LEGACY?CHANNEL:k)};
- window.RUGBY_DATA={legacyKey:LEGACY,key:CHANNEL,schema:SCHEMA,channel:isTest?'test':'official',installationId,profileKey:PROFILE_KEY,getProfile,saveProfile,rawGet:k=>rawGet.call(localStorage,k),rawSet:(k,v)=>rawSet.call(localStorage,k,v),normalize};
+ window.RUGBY_DATA={legacyKey:LEGACY,key:CHANNEL,schema:SCHEMA,channel:'official',installationId,profileKey:PROFILE_KEY,getProfile,saveProfile,rawGet:k=>rawGet.call(localStorage,k),rawSet:(k,v)=>rawSet.call(localStorage,k,v),normalize};
 })();
